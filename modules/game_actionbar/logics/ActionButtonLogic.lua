@@ -1,6 +1,19 @@
 -- /*=============================================
 -- =            util             =
 -- =============================================*/
+
+-- Multi-Action System
+local MultiActionQueue = nil
+local MultiActionIntegrator = nil
+local function initializeMultiActionSystem()
+    if not MultiActionQueue then
+        MultiActionQueue = dofile('logics/MultiActionQueue.lua')
+    end
+    if not MultiActionIntegrator then
+        MultiActionIntegrator = dofile('logics/MultiActionIntegrator.lua')
+    end
+end
+
 local function string_empty(str)
     return #str == 0
 end
@@ -179,6 +192,12 @@ function onExecuteAction(button, isPress)
 
     if isPress and button.cache.nextDownKey > g_clock.millis() then
         return true
+    end
+
+    -- Multi-Action System Check
+    initializeMultiActionSystem()
+    if MultiActionIntegrator and MultiActionIntegrator.isMultiAction(button) then
+        return MultiActionIntegrator.executeMultiAction(button, isPress)
     end
 
     local cooldown = isPress and 600 or 150
@@ -633,8 +652,21 @@ function configureButtonMouseRelease(button)
             menu:addOption(button.cache.hotkey and tr('Edit Hotkey') or tr('Assign Hotkey'), function()
                 assignHotkey(button)
             end)
+            
+            -- Multi-Action Option
+            menu:addSeparator()
             if button.cache.actionType > 0 then
+                menu:addOption(tr('Assign Multi-Action'), function()
+                    initializeMultiActionSystem()
+                    if MultiActionIntegrator then
+                        local MultiActionWindow = dofile('logics/MultiActionWindow.lua')
+                        openMultiActionWindow(button)
+                    end
+                end)
                 menu:addSeparator()
+            end
+            
+            if button.cache.actionType > 0 then
                 menu:addOption(tr('Clear Action'), function()
                     clearButton(button, true)
                 end)
@@ -1032,6 +1064,58 @@ function onDragItemLeave(self, mousePos, button)
             ApiJson.createOrUpdatePassive(tonumber(draggedBarID), tonumber(draggedButtonID), 1)
         end
 
+-- /*=============================================
+-- =        Multi-Action Public API          =
+-- =============================================*/
+
+function setMultiAction(button, actions, mode)
+    initializeMultiActionSystem()
+    if MultiActionIntegrator then
+        return MultiActionIntegrator.setMultiAction(button, actions, mode)
+    end
+    return false
+end
+
+function isMultiAction(button)
+    initializeMultiActionSystem()
+    if MultiActionIntegrator then
+        return MultiActionIntegrator.isMultiAction(button)
+    end
+    return false
+end
+
+function getMultiActions(button)
+    initializeMultiActionSystem()
+    if MultiActionIntegrator then
+        return MultiActionIntegrator.getMultiActions(button)
+    end
+    return nil
+end
+
+function clearMultiAction(button)
+    initializeMultiActionSystem()
+    if MultiActionIntegrator then
+        return MultiActionIntegrator.clearMultiAction(button)
+    end
+    return false
+end
+
+function debugMultiAction(button)
+    initializeMultiActionSystem()
+    if MultiActionIntegrator then
+        MultiActionIntegrator.debugPrintMultiActions(button)
+    end
+end
+
+function getMultiActionQueue()
+    initializeMultiActionSystem()
+    return MultiActionQueue
+end
+
+function getMultiActionIntegrator()
+    initializeMultiActionSystem()
+    return MultiActionIntegrator
+end
         removeCooldown(destButton)
         resetDragWidget(self, button)
     end
