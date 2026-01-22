@@ -47,6 +47,67 @@ void CachedText::draw(const Rect& rect, const Color& color)
     g_drawPool.addTexturedCoordsBuffer(m_font->getTexture(), m_coordsBuffer, color);
 }
 
+void CachedText::drawWithHighlight(const Rect& rect, const Color& baseColor, const Color& highlightColor, float highlightPos, float highlightWidth)
+{
+    if (!m_font || m_text.empty())
+        return;
+
+    // Hack to fix font rendering in atlas
+    if (m_font->getAtlasRegion() != m_atlasRegion) {
+        m_atlasRegion = m_font->getAtlasRegion();
+    }
+
+    // Calculate glyph positions if needed
+    if (m_textScreenCoords != rect) {
+        m_textScreenCoords = rect;
+        m_font->calculateGlyphsPositions(m_text, m_align, m_glyphsPositions, nullptr);
+    }
+
+    int textLen = static_cast<int>(m_text.length());
+    if (textLen == 0) return;
+
+    // Wrap highlight position to be within bounds
+    while (highlightPos < 0) highlightPos += textLen;
+    while (highlightPos >= textLen) highlightPos -= textLen;
+
+    // Create color mapping with smooth gradient for each letter
+    std::vector<std::pair<int, Color>> textColors;
+    textColors.reserve(textLen);
+    
+    for (int i = 0; i < textLen; ++i) {
+        // Calculate distance from highlight center (considering wrap-around)
+        float dist = std::abs(static_cast<float>(i) - highlightPos);
+        // Handle wrap-around: check if going the other way is shorter
+        float wrapDist = textLen - dist;
+        dist = std::min(dist, wrapDist);
+        
+        // Calculate interpolation factor (0 = base color, 1 = highlight color)
+        // Using smooth falloff based on distance and width
+        float t = 0.0f;
+        if (dist < highlightWidth) {
+            // Smooth cosine interpolation for nice falloff
+            t = (std::cos(dist / highlightWidth * 3.14159f) + 1.0f) / 2.0f;
+        }
+        
+        // Interpolate between base and highlight colors
+        uint8_t r = static_cast<uint8_t>(baseColor.r() + (highlightColor.r() - baseColor.r()) * t);
+        uint8_t g = static_cast<uint8_t>(baseColor.g() + (highlightColor.g() - baseColor.g()) * t);
+        uint8_t b = static_cast<uint8_t>(baseColor.b() + (highlightColor.b() - baseColor.b()) * t);
+        uint8_t a = static_cast<uint8_t>(baseColor.a() + (highlightColor.a() - baseColor.a()) * t);
+        
+        textColors.emplace_back(i, Color(r, g, b, a));
+    }
+
+    // Use fillTextColorCoords to render with multiple colors
+    std::vector<std::pair<Color, CoordsBufferPtr>> colorCoords;
+    m_font->fillTextColorCoords(colorCoords, m_text, textColors, m_textSize, m_align, rect, m_glyphsPositions);
+
+    // Draw each color group
+    for (const auto& kv : colorCoords) {
+        g_drawPool.addTexturedCoordsBuffer(m_font->getTexture(), kv.second, kv.first);
+    }
+}
+
 void CachedText::update()
 {
     if (m_font) {

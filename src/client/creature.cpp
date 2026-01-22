@@ -291,6 +291,12 @@ void Creature::drawInformation(const MapPosInfo& mapRect, const Point& dest, con
     g_drawPool.setDrawOrder(DrawOrder::SECOND);
 
     if (drawFlags & Otc::DrawNames) {
+        // Draw name with highlight effect if enabled, otherwise use solid color
+        if (m_useNameHighlight) {
+            m_name.drawWithHighlight(textRect, m_nameColor, m_nameHighlightColor, m_nameHighlightPos, m_nameHighlightWidth);
+        } else {
+            m_name.draw(textRect, m_useCustomNameColor ? m_nameColor : fillColor);
+        }
         PainterShaderProgramPtr nameProgram;
         if (!m_nameShader.empty())
             nameProgram = g_shaders.getShader(m_nameShader);
@@ -1371,6 +1377,26 @@ std::string Creature::getText()
 bool Creature::canShoot(int distance)
 {
     return getTile() ? getTile()->canShoot(distance) : false;
+}
+
+void Creature::setNameColor(const Color& color)
+{
+    m_nameColor = color;
+    m_useCustomNameColor = true;
+}
+
+void Creature::resetNameColor()
+{
+    m_useCustomNameColor = false;
+}
+
+void Creature::setNameHighlight(const Color& baseColor, const Color& highlightColor, float highlightPos, float highlightWidth)
+{
+    m_nameColor = baseColor;
+    m_nameHighlightColor = highlightColor;
+    m_nameHighlightPos = highlightPos;
+    m_nameHighlightWidth = highlightWidth;
+    m_useNameHighlight = true;
 }
 
 bool Creature::hasPaperdoll(uint16_t id) {

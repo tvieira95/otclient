@@ -664,6 +664,10 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Creature>("setText", &Creature::setText);
     g_lua.bindClassMemberFunction<Creature>("getText", &Creature::getText);
     g_lua.bindClassMemberFunction<Creature>("clearText", &Creature::clearText);
+    g_lua.bindClassMemberFunction<Creature>("setNameColor", &Creature::setNameColor);
+    g_lua.bindClassMemberFunction<Creature>("resetNameColor", &Creature::resetNameColor);
+    g_lua.bindClassMemberFunction<Creature>("setNameHighlight", &Creature::setNameHighlight);
+    g_lua.bindClassMemberFunction<Creature>("clearNameHighlight", &Creature::clearNameHighlight);
     g_lua.bindClassMemberFunction<Creature>("canShoot", &Creature::canShoot);
 
     g_lua.bindClassMemberFunction<Creature>("setVocation", &Creature::setVocation);

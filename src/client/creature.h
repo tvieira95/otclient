@@ -186,6 +186,10 @@ minHeight,
     void setText(const std::string& text, const Color& color);
     std::string getText();
     void clearText() { setText("", Color::white); }
+    void setNameColor(const Color& color);
+    void resetNameColor();
+    void setNameHighlight(const Color& baseColor, const Color& highlightColor, float highlightPos, float highlightWidth = 2.0f);
+    void clearNameHighlight() { m_useNameHighlight = false; }
     bool canShoot(int distance);
 
     const auto& getIcons() {
@@ -315,6 +319,12 @@ private:
     Color m_timedSquareColor{ Color::white };
     Color m_staticSquareColor{ Color::white };
     Color m_informationColor{ Color::white };
+    Color m_nameColor{ Color::white };
+    Color m_nameHighlightColor{ Color::white };
+    float m_nameHighlightPos{ 0.0f };
+    float m_nameHighlightWidth{ 2.0f };
+    bool m_useCustomNameColor{ false };
+    bool m_useNameHighlight{ false };
 
     Bounce m_bounce;
 
