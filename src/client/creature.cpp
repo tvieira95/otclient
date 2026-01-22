@@ -311,7 +311,7 @@ void Creature::drawInformation(const MapPosInfo& mapRect, const Point& dest, con
 
         if (m_text) {
             auto extraTextSize = m_text->getTextSize();
-            Rect extraTextRect = Rect(p.x - extraTextSize.width() / 2.0, p.y + 15, extraTextSize);
+            Rect extraTextRect = Rect(p.x - extraTextSize.width() / 2.0, textRect.y() - extraTextSize.height() + 2, extraTextSize);
             m_text->drawText(extraTextRect.center(), extraTextRect);
         }
     }
